@@ -359,16 +359,16 @@ const AnalyticsDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="date"
-                      tickFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      tickFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
                     />
                     <YAxis />
                     <Tooltip
-                      labelFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      labelFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
-                      formatter={(value) => [value, "Bookings"]}
+                      formatter={(value: any) => [value, "Bookings"]}
                     />
                     <Bar dataKey="bookings" fill="#3B82F6" />
                   </BarChart>
@@ -392,9 +392,12 @@ const AnalyticsDashboard = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ _id, percent }) =>
-                        `${_id} ${((percent || 0) * 100).toFixed(0)}%`
-                      }
+                      label={(props: any) => {
+                        const id =
+                          props?._id ?? props?.payload?._id ?? props?.name ?? "";
+                        const pct = props?.percent ?? 0;
+                        return `${id} ${(pct * 100).toFixed(0)}%`;
+                      }}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
@@ -559,16 +562,16 @@ const AnalyticsDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="week"
-                      tickFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      tickFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
                     />
                     <YAxis />
                     <Tooltip
-                      labelFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      labelFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
-                      formatter={(value, name) => [
+                      formatter={(value: any, name: any) => [
                         value,
                         name === "bookings" ? "Bookings" : "Forecast",
                       ]}
@@ -606,16 +609,16 @@ const AnalyticsDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="week"
-                      tickFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      tickFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
                     />
                     <YAxis />
                     <Tooltip
-                      labelFormatter={(value) =>
-                        new Date(value).toLocaleDateString()
+                      labelFormatter={(value: any) =>
+                        new Date(String(value)).toLocaleDateString()
                       }
-                      formatter={(value) => [
+                      formatter={(value: any) => [
                         formatCurrency(value as number),
                         "Revenue",
                       ]}
