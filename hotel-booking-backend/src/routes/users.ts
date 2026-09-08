@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import User from "../models/user";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { check, validationResult } from "express-validator";
 import verifyToken from "../middleware/auth";
@@ -46,8 +47,14 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
-      user = new User(req.body);
-      await user.save();
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+user = new User({
+  ...req.body,
+  password: hashedPassword,
+});
+
+await user.save();
 
       const token = jwt.sign(
         { userId: user.id },
