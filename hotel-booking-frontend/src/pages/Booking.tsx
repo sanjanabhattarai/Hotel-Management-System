@@ -21,7 +21,7 @@ const Booking = () => {
   const search = useSearchContext();
   const { hotelId } = useParams();
 
-  const [numberOfNights, setNumberOfNights] = useState<number>(0);
+  const [numberOfNights, setNumberOfNights] = useState<number>(1);
 
   useEffect(() => {
     if (search.checkIn && search.checkOut) {
@@ -29,11 +29,18 @@ const Booking = () => {
         Math.abs(search.checkOut.getTime() - search.checkIn.getTime()) /
         (1000 * 60 * 60 * 24);
 
-      setNumberOfNights(Math.ceil(nights));
+      // Always at least 1 night so payment intent can be created
+      setNumberOfNights(Math.max(1, Math.ceil(nights) || 1));
     }
   }, [search.checkIn, search.checkOut]);
 
-  const { data: paymentIntentData, isLoading: isLoadingPayment } = useQuery(
+  const {
+    data: paymentIntentData,
+    isLoading: isLoadingPayment,
+    isError: isPaymentError,
+    error: paymentError,
+    refetch: refetchPayment,
+  } = useQuery(
     "createPaymentIntent",
     () =>
       apiClient.createPaymentIntent(
@@ -42,6 +49,7 @@ const Booking = () => {
       ),
     {
       enabled: !!hotelId && numberOfNights > 0,
+      retry: 1,
     }
   );
 
@@ -55,7 +63,8 @@ const Booking = () => {
 
   const { data: currentUser, isLoading: isLoadingUser } = useQuery(
     "fetchCurrentUser",
-    apiClient.fetchCurrentUser
+    apiClient.fetchCurrentUser,
+    { retry: false }
   );
 
   if (isLoadingHotel || isLoadingUser) {
@@ -176,6 +185,39 @@ const Booking = () => {
                   <div className="flex items-center gap-3">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                     <span className="text-gray-700">Preparing payment...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : isPaymentError ? (
+              <Card className="shadow-lg border-0 bg-white">
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-gray-800 font-medium mb-2">
+                      Could not prepare payment
+                    </p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {(paymentError as Error)?.message ||
+                        "Please check your dates and try again."}
+                    </p>
+                    <button
+                      onClick={() => refetchPayment()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Retry payment
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : !currentUser ? (
+              <Card className="shadow-lg border-0 bg-white">
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-gray-800 font-medium mb-2">
+                      Please sign in to continue booking
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Your session may have expired.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
