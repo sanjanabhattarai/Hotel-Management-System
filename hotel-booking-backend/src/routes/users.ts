@@ -1,6 +1,5 @@
 import express, { Request, Response } from "express";
 import User from "../models/user";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { check, validationResult } from "express-validator";
 import verifyToken from "../middleware/auth";
@@ -47,14 +46,13 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      // Password hashing is handled by User model pre-save hook - pass plaintext
+      user = new User({
+        ...req.body,
+        password: req.body.password,
+      });
 
-user = new User({
-  ...req.body,
-  password: hashedPassword,
-});
-
-await user.save();
+      await user.save();
 
       const token = jwt.sign(
         { userId: user.id },
@@ -64,6 +62,14 @@ await user.save();
         }
       );
 
+      res.cookie("session_id", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 86400000,
+        path: "/",
+      });
+      // Keep legacy cookie for backwards compatibility
       res.cookie("auth_token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -71,7 +77,11 @@ await user.save();
         maxAge: 86400000,
         path: "/",
       });
-      return res.status(200).send({ message: "User registered OK" });
+      return res.status(200).send({
+        message: "User registered OK",
+        userId: user._id,
+        token,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Something went wrong" });

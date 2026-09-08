@@ -17,8 +17,8 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7);
   } else {
-    // Fallback to session cookie
-    token = req.cookies["session_id"];
+    // Fallback to session cookie (support both current and legacy names)
+    token = req.cookies["session_id"] || req.cookies["auth_token"];
   }
 
   if (!token) {

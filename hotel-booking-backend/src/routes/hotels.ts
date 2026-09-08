@@ -233,14 +233,14 @@ const constructSearchQuery = (queryParams: any) => {
   if (queryParams.stars) {
     const starRatings = Array.isArray(queryParams.stars)
       ? queryParams.stars.map((star: string) => parseInt(star))
-      : parseInt(queryParams.stars);
+      : [parseInt(queryParams.stars)];
 
     constructedQuery.starRating = { $in: starRatings };
   }
 
   if (queryParams.maxPrice) {
     constructedQuery.pricePerNight = {
-      $lte: parseInt(queryParams.maxPrice).toString(),
+      $lte: parseInt(queryParams.maxPrice),
     };
   }
 
